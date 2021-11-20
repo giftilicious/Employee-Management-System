@@ -1,6 +1,28 @@
 {
+  "name": "employee-management-system",
+  "version": "1.0.0",
+  "description": "This is a content management system (CMS) built to manage a company's employee database.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/giftilicious/Employee-Management-System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/giftilicious/Employee-Management-System/issues"
+  },
+  "homepage": "https://github.com/giftilicious/Employee-Management-System#readme",
   "dependencies": {
+    "console.table": "^0.10.0",
+    "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "inquirer": "^8.2.0",
     "mysql2": "^2.3.3"
   }
 }
