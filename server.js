@@ -20,7 +20,55 @@ const db = mysql.createConnection(
     console.log(`Connected to the employees_db database.`)
 );
 
-function departmentTable() {
+console.log('\n\nWelcome To The Employee Management System\n\n===============================\n');
+
+
+const init = () => {
+    inquirer
+        .prompt([
+            {
+                type: "list",
+                name: "initialize",
+                message: "What would you like to do?",
+                choices: [
+                    "View All Employees",
+                    "Add Employee",
+                    "Update Employee Role",
+                    "View All Roles",
+                    "Add Role",
+                    "View All Departments",
+                    "Add Department",
+                    "Quit"
+                ],
+            },
+        ])
+        .then((answers) => {
+            if (answers.initialize === "View All Employees") {
+                viewEmployee();
+            } else if (answers.initialize === "Add Employee") {
+                addEmployee();
+            } else if (answers.initialize === "Update Employee Role") {
+                updateEmployee();
+            } else if (answers.initialize === "View All Roles") {
+                viewRole();
+            } else if (answers.initialize === "Add Role") {
+                addRole();
+            } else if (answers.initialize === "View All Departments") {
+                viewDepartment();
+            } else if (answers.initialize === "Add Department") {
+                addDepartment();
+            } else {
+                console.log("Have a great day!");
+            }
+            return;
+        });
+};
+
+// titlePage();
+init();
+
+
+function viewDepartment() {
     db.query("SELECT * FROM department ORDER BY department.id", function (err, results) {
         if (err) {
             console.log(err);
@@ -31,9 +79,16 @@ function departmentTable() {
         return;
     });
 };
-function rolesTable() {
-    const sql =
-        "SELECT role.id, title, salary, department.name FROM department INNER JOIN role ON role.department_id = department.id ORDER BY role.id";
+function viewRole() {
+    const sql = `
+        SELECT role.id, 
+        title, 
+        salary, 
+        department.name 
+        FROM department 
+        INNER JOIN role 
+        ON role.department_id = department.id 
+        ORDER BY role.id`;
     db.query(sql, (err, results) => {
         if (err) {
             console.log(err);
@@ -45,22 +100,22 @@ function rolesTable() {
         }
     });
 };
-function employeeAllTable() {
+function viewEmployee() {
     const sql = `
-    SELECT employee.id, 
-    employee.first_name,
-    employee.last_name,
-    role.title,
-    department.name,	
-    role.salary
-    FROM employee
-    INNER JOIN role
-    ON employee.role_id = role.id
-    INNER JOIN department
-    ON role.department_id = department.id
-    LEFT OUTER JOIN employee AS Managers
-    ON employee.manager_id = managers.id
-    ORDER BY employee.id`;
+        SELECT employee.id, 
+        employee.first_name,
+        employee.last_name,
+        role.title,
+        department.name,	
+        role.salary
+        FROM employee
+        INNER JOIN role
+        ON employee.role_id = role.id
+        INNER JOIN department
+        ON role.department_id = department.id
+        LEFT OUTER JOIN employee AS manager
+        ON employee.manager_id = manager.id
+        ORDER BY employee.id`;
     db.query(sql, (err, results) => {
         if (err) {
             console.log(err);
@@ -78,14 +133,14 @@ function addDepartment() {
         .prompt([
             {
                 type: "input",
-                name: "department_name",
+                name: "departmentName",
                 message: "What is the name of the department?",
             },
         ])
         .then((answers) => {
             const sql = `
                   INSERT INTO department (name)
-                  VALUES ("${answers.department_name}")`;
+                  VALUES ("${answers.departmentName}")`;
             db.query(sql, (err, results) => {
                 if (err) {
                     console.log(err);
@@ -106,17 +161,17 @@ function addRole() {
         inquirer.prompt([
             {
                 type: "input",
-                message: "What is the title of the role?",
+                message: "What is the name of the role?",
                 name: "role_title",
             },
             {
                 type: "input",
-                message: "What is the salary for this role?",
+                message: "What is the salary of the role?",
                 name: "role_salary",
             },
             {
                 type: "list",
-                message: "What department is this role associated with?",
+                message: "What department does the role belong to?",
                 name: "role_id",
                 choices: results.map((department) => {
                     return {
@@ -162,12 +217,12 @@ function addEmployee() {
                 {
                     type: "input",
                     message: "What is the employee's first name?",
-                    name: "fName",
+                    name: "firstName",
                 },
                 {
                     type: "input",
                     message: "What is the employee's last name?",
-                    name: "lName",
+                    name: "lastName",
                 },
                 {
                     type: "list",
@@ -195,7 +250,7 @@ function addEmployee() {
                 .then((answers) => {
                     let sql = `
           INSERT INTO employee (first_name, last_name, role_id, manager_id)
-          VALUES("${answers.fName}", "${answers.lName}", ${answers.role_title}, ${answers.manager})`;
+          VALUES("${answers.firstName}", "${answers.lastName}", ${answers.role_title}, ${answers.manager})`;
                     db.query(sql, (err, results) => {
                         if (err) {
                             console.log(err);
@@ -211,7 +266,7 @@ function addEmployee() {
 
 function updateEmployee() {
     let role = [];
-    let employeeData = [];
+    let newRole = [];
     let sql = `SELECT id, title from role`;
     db.query(sql, (err, results) => {
         if (err) {
@@ -231,7 +286,7 @@ function updateEmployee() {
                 return;
             }
             for (let i = 0; i < results.length; i++) {
-                employeeData.push({
+                newRole.push({
                     name: results[i].first_name + " " + results[i].last_name,
                     value: results[i].id,
                 });
@@ -240,20 +295,20 @@ function updateEmployee() {
                 .prompt([
                     {
                         type: "list",
-                        message: "Which employee's role would you like to update?",
-                        name: "original_role",
-                        choices: employeeData,
+                        message: "Which employee's role do you want to update?",
+                        name: "current_role",
+                        choices: newRole,
                     },
                     {
                         type: "list",
-                        message: "What would you like to change their role too?",
+                        message: "Which role do you want to assign the selected employee?",
                         name: "updated_role",
                         choices: role,
                     },
                 ])
                 .then((answers) => {
                     let sql = `UPDATE employee SET role_id=? WHERE id)?`;
-                    db.query(sql, (answers.updated_role, answers.original_role), (err, results) => {
+                    db.query(sql, (answers.updated_role, answers.current_role), (err, results) => {
                         if (err) {
                             console.log(err);
                         }
@@ -265,68 +320,24 @@ function updateEmployee() {
     });
 };
 
-const titlePage = () => {
-    console.log(`
-  /$$$$$$$$                         /$$                                               /$$      /$$                                                                  
- | $$_____/                        | $$                                              | $$$    /$$$                                                                  
- | $$       /$$$$$$/$$$$   /$$$$$$ | $$  /$$$$$$  /$$   /$$  /$$$$$$   /$$$$$$       | $$$$  /$$$$  /$$$$$$  /$$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$       
- | $$$$$   | $$_  $$_  $$ /$$__  $$| $$ /$$__  $$| $$  | $$ /$$__  $$ /$$__  $$      | $$ $$/$$ $$ |____  $$| $$__  $$ |____  $$ /$$__  $$ /$$__  $$ /$$__  $$      
- | $$__/   | $$ \ $$ \ $$| $$  \ $$| $$| $$  \ $$| $$  | $$| $$$$$$$$| $$$$$$$$      | $$  $$$| $$  /$$$$$$$| $$  \ $$  /$$$$$$$| $$  \ $$| $$$$$$$$| $$  \__/      
- | $$      | $$ | $$ | $$| $$  | $$| $$| $$  | $$| $$  | $$| $$_____/| $$_____/      | $$\  $ | $$ /$$__  $$| $$  | $$ /$$__  $$| $$  | $$| $$_____/| $$            
- | $$$$$$$$| $$ | $$ | $$| $$$$$$$/| $$|  $$$$$$/|  $$$$$$$|  $$$$$$$|  $$$$$$$      | $$ \/  | $$|  $$$$$$$| $$  | $$|  $$$$$$$|  $$$$$$$|  $$$$$$$| $$            
- |________/|__/ |__/ |__/| $$____/ |__/ \______/  \____  $$ \_______/ \_______/      |__/     |__/ \_______/|__/  |__/ \_______/ \____  $$ \_______/|__/            
-                         | $$                     /$$  | $$                                                                      /$$  \ $$                          
-                         | $$                    |  $$$$$$/                                                                     |  $$$$$$/                          
-                         |__/                     \______/                                                                       \______/                           
- 
- `)
-}
+// const titlePage = () => {
+//     console.log(`
+//   /$$$$$$$$                         /$$                                               /$$      /$$                                                                  
+//  | $$_____/                        | $$                                              | $$$    /$$$                                                                  
+//  | $$       /$$$$$$/$$$$   /$$$$$$ | $$  /$$$$$$  /$$   /$$  /$$$$$$   /$$$$$$       | $$$$  /$$$$  /$$$$$$  /$$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$       
+//  | $$$$$   | $$_  $$_  $$ /$$__  $$| $$ /$$__  $$| $$  | $$ /$$__  $$ /$$__  $$      | $$ $$/$$ $$ |____  $$| $$__  $$ |____  $$ /$$__  $$ /$$__  $$ /$$__  $$      
+//  | $$__/   | $$ \ $$ \ $$| $$  \ $$| $$| $$  \ $$| $$  | $$| $$$$$$$$| $$$$$$$$      | $$  $$$| $$  /$$$$$$$| $$  \ $$  /$$$$$$$| $$  \ $$| $$$$$$$$| $$  \__/      
+//  | $$      | $$ | $$ | $$| $$  | $$| $$| $$  | $$| $$  | $$| $$_____/| $$_____/      | $$\  $ | $$ /$$__  $$| $$  | $$ /$$__  $$| $$  | $$| $$_____/| $$            
+//  | $$$$$$$$| $$ | $$ | $$| $$$$$$$/| $$|  $$$$$$/|  $$$$$$$|  $$$$$$$|  $$$$$$$      | $$ \/  | $$|  $$$$$$$| $$  | $$|  $$$$$$$|  $$$$$$$|  $$$$$$$| $$            
+//  |________/|__/ |__/ |__/| $$____/ |__/ \______/  \____  $$ \_______/ \_______/      |__/     |__/ \_______/|__/  |__/ \_______/ \____  $$ \_______/|__/            
+//                          | $$                     /$$  | $$                                                                      /$$  \ $$                          
+//                          | $$                    |  $$$$$$/                                                                     |  $$$$$$/                          
+//                          |__/                     \______/                                                                       \______/                           
 
-const init = () => {
-    inquirer
-        .prompt([
-            {
-                type: "list",
-                name: "begin",
-                message: "Choose an option...",
-                choices: [
-                    "View all departments",
-                    "View all roles",
-                    "View all employees",
-                    "Add a department",
-                    "Add a role",
-                    "Add an employee",
-                    "Update an employee role",
-                    "Exit",
-                ],
-            },
-        ])
-        .then((answers) => {
-            if (answers.begin === "View all departments") {
-                departmentTable();
-            } else if (answers.begin === "View all roles") {
-                rolesTable();
-            } else if (answers.begin === "View all employees") {
-                employeeAllTable();
-            } else if (answers.begin === "Add a department") {
-                addDepartment();
-            } else if (answers.begin === "Add a role") {
-                addRole();
-            } else if (answers.begin === "Add an employee") {
-                addEmployee();
-            } else if (answers.begin === "Update an employee role") {
-                updateEmployee();
-            } else {
-                console.log("Have a great day!");
-            }
-            return;
-        });
-};
+//  `)
+// }
 
-titlePage();
-init();
-
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT)
+// app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+// });
