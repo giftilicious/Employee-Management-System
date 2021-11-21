@@ -17,11 +17,9 @@ const db = mysql.createConnection(
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD
     },
-    console.log(`Connected to the employees_db database.`)
+    console.log(`Connected to the employees_db database.`),
+    console.log('\n\nWelcome To The Employee Management System\n\n===============================\n')
 );
-
-console.log('\n\nWelcome To The Employee Management System\n\n===============================\n');
-
 
 const init = () => {
     inquirer
@@ -63,10 +61,7 @@ const init = () => {
             return;
         });
 };
-
-// titlePage();
 init();
-
 
 function viewDepartment() {
     db.query("SELECT * FROM department ORDER BY department.id", function (err, results) {
@@ -100,6 +95,7 @@ function viewRole() {
         }
     });
 };
+
 function viewEmployee() {
     const sql = `
         SELECT employee.id, 
@@ -183,9 +179,8 @@ function addRole() {
         ])
             .then((answers) => {
                 const sql = `
-              INSERT INTO role (title, salary, department_id)
-              VALUES ("${answers.role_title}", ${answers.role_salary}, ${answers.role_id})
-      `;
+            INSERT INTO role (title, salary, department_id)
+            VALUES ("${answers.role_title}", ${answers.role_salary}, ${answers.role_id})`;
                 db.query(sql, (err, results) => {
                     if (err) {
                         console.log(err);
@@ -194,9 +189,7 @@ function addRole() {
                     init();
                     return;
                 });
-
             })
-
     });
 };
 
@@ -320,7 +313,6 @@ function updateEmployee() {
         });
     });
 };
-
 
 
 app.listen(PORT)
