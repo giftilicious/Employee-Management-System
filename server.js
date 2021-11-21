@@ -18,7 +18,7 @@ const db = mysql.createConnection(
         password: process.env.DB_PASSWORD
     },
     console.log(`Connected to the employees_db database.`),
-    console.log('\n\nWelcome To The Employee Management System\n\n===============================\n')
+    console.log('\n\nWelcome To The Employee Management System\n\n=========================================\n')
 );
 
 const init = () => {
@@ -56,7 +56,7 @@ const init = () => {
             } else if (answers.initialize === "Add Department") {
                 addDepartment();
             } else {
-                console.log("Have a great day!");
+                console.log("Thank you for using the Employee Management System");
             }
             return;
         });
